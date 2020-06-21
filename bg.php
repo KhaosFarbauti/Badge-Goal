@@ -27,10 +27,17 @@
 		$couleur = "9e00b1";
 	}
 
+	if (isset($_GET["label"])){
+		$montant = htmlspecialchars($_GET["label"]);
+	} else {
+		$montant = $montant."€";
+	}
+	
 // montant : montant actuel
 // goal : montant 100%
 // tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)
 // couleur : couleur du badge en hexa (sans le '#' devant)
+// label : remplace le montant en € par un texte
 
 
 ?>
@@ -121,7 +128,7 @@ body {
       <div class="mask half">
         <div class="fill"></div>
       </div>
-      <div class="inside-circle"><?php echo $montant ?>€</div>
+      <div class="inside-circle"><?php echo $montant ?></div>
     </div>
   </div>
   <br />
@@ -131,6 +138,7 @@ body {
   <li>goal : montant 100%</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
+  <li>label : remplace le montant en € par un texte</li>
   </ul>
   <p>Auto-refresh de la page toutes les 2 minutes</p>
   
