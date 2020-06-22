@@ -33,11 +33,18 @@
 		$montant = $montant."€";
 	}
 	
+	if (isset($_GET["type"])){
+		$type = intval(htmlspecialchars($_GET["type"]));
+	} else {
+		$type = 0;
+	}
+	
 // montant : montant actuel
 // goal : montant 100%
 // tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)
 // couleur : couleur du badge en hexa (sans le '#' devant)
 // label : remplace le montant en € par un texte
+// Type : change l'apparence
 
 
 ?>
@@ -66,7 +73,7 @@ body {
   margin: 50px auto;
   width: 150px;
   height: 150px;
-  background: #e6e2e7;
+  background: <?php if ($type == 1){echo "transparent";} else {echo "#e6e2e7";} ?>;
   border-radius: 50%;
 }
 
@@ -106,7 +113,7 @@ body {
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  background: #fffffff0;
+  background: <?php if ($type == 1){echo "#34495e;\n color: #ecf0f1";} else {echo "#fffffff0";} ?>;
   line-height: 130px;
   text-align: center;
   margin-top: 10px;
@@ -139,6 +146,7 @@ body {
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
+  <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
   </ul>
   <p>Auto-refresh de la page toutes les 2 minutes</p>
   
