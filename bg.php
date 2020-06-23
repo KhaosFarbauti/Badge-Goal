@@ -4,7 +4,9 @@
 
 	if (isset($_GET["tipeee_id"])){
 		$tipeee_id = htmlspecialchars($_GET["tipeee_id"]);
+		set_error_handler(function() { /* pour catcher le warning */ });
 		$raw = file_get_contents("https://api.tipeee.com/v2.0/projects/".$tipeee_id);
+		restore_error_handler();
 		$json = json_decode($raw);
 		$montant = intval($json->parameters->tipperAmount);
 		unset($raw);
