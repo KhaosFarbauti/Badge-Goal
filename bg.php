@@ -162,7 +162,7 @@ body {
   <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
   <li>goal : montant 100%</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)</li>
-  <li>utip_id : recupere le montant sur la page tipeee correspondante (additionne avec tipeee si defini)</li>
+  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee si defini)</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
