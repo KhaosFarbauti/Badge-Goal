@@ -168,6 +168,7 @@ body {
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
   </ul>
   <p>Auto-refresh de la page toutes les 2 minutes</p>
+  <p>Repository : <a href="https://bitbucket.org/khaos_farbauti/badge-goal/src/master/">https://bitbucket.org/khaos_farbauti/badge-goal/src/master/</a></p>
   
 </body>
 </html>
