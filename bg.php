@@ -21,7 +21,7 @@
 		$raw = file_get_contents("https://www.utip.io/creator/profile/stats/".$utip_id."/earned");
 		restore_error_handler();
 		$json = json_decode($raw);
-		$montant = $montant + intval($json->parameters->amountEarned);
+		$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
 		unset($raw);
 		unset($json);
 	}
