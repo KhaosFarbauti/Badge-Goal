@@ -44,8 +44,16 @@
 		$couleur = "9e00b1";
 	}
 
+	if (isset($_GET["pourcentage"])){
+		$pourcentage = intval(htmlspecialchars($_GET["pourcentage"]));
+	} else {
+		$pourcentage = 0;
+	}
+
 	if (isset($_GET["label"])){
 		$montant = htmlspecialchars($_GET["label"]);
+	} else if ($pourcentage == 1){
+		$montant = intval($montant / $goal * 100)."%";
 	} else {
 		$montant = $montant."€";
 	}
@@ -63,6 +71,7 @@
 // couleur : couleur du badge en hexa (sans le '#' devant)
 // label : remplace le montant en € par un texte
 // Type : change l'apparence
+// Pourcentage : si 1, remplace le montant par un pourcentage
 
 
 ?>
@@ -160,9 +169,10 @@ body {
   <p>Variables de l'url :<br /></p>
   <ul>
   <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
-  <li>goal : montant 100%</li>
+  <li>goal : montant objectif</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)</li>
   <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee si defini)</li>
+  <li>Pourcentage : si definit a 1, remplace le montant par un pourcentage</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
