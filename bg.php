@@ -1,17 +1,32 @@
 <?php 
 
 	$montant = 0;
-
+	
+	ini_set('default_socket_timeout', 20);
+	
 	if (isset($_GET["tipeee_id"])){
 		$tipeee_id = htmlspecialchars($_GET["tipeee_id"]);
 		set_error_handler(function() { /* pour catcher le warning */ });
 		$raw = file_get_contents("https://api.tipeee.com/v2.0/projects/".$tipeee_id);
 		restore_error_handler();
 		$json = json_decode($raw);
-		$montant = intval($json->parameters->tipperAmount);
+		$montant = $montant + intval($json->parameters->tipperAmount);
 		unset($raw);
 		unset($json);
-	} else {
+	}
+	
+	if (isset($_GET["utip_id"])){
+		$tipeee_id = htmlspecialchars($_GET["utip_id"]);
+		set_error_handler(function() { /* pour catcher le warning */ });
+		$raw = file_get_contents("https://www.utip.io/creator/profile/stats/".$utip_id."/earned");
+		restore_error_handler();
+		$json = json_decode($raw);
+		$montant = $montant + intval($json->parameters->amountEarned);
+		unset($raw);
+		unset($json);
+	}
+		
+	if (isset($_GET["montant"])){		
 		$montant = intval(htmlspecialchars($_GET["montant"]));
 	}
 	
@@ -41,9 +56,10 @@
 		$type = 0;
 	}
 	
-// montant : montant actuel
+// montant : montant actuel (si defini remplace tipeee/utip)
 // goal : montant 100%
-// tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)
+// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)
+// utip_id : recupere le montant sur la page tipeee correspondante (additionne avec tipeee si defini)
 // couleur : couleur du badge en hexa (sans le '#' devant)
 // label : remplace le montant en € par un texte
 // Type : change l'apparence
@@ -143,9 +159,10 @@ body {
   <br />
   <p>Variables de l'url :<br /></p>
   <ul>
-  <li>montant : montant actuel</li>
+  <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
   <li>goal : montant 100%</li>
-  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (remplace montant)</li>
+  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)</li>
+  <li>utip_id : recupere le montant sur la page tipeee correspondante (additionne avec tipeee si defini)</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
