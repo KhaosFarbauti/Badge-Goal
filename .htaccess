@@ -3,10 +3,11 @@
 
   RewriteBase /
   RewriteCond %{REQUEST_FILENAME} !-f
-
-  RewriteRule ^(.*)$ /bg.php$1
+  RewriteRule ^(.*)$ /bg.php [QSA]
   
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   
 </IfModule>
+
+Options -Indexes
