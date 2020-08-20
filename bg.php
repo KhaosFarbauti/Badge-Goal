@@ -199,6 +199,7 @@ body {
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
   </ul>
+  <p>Exemple : <a href="bg.php?&montant=69&goal=100&couleur=FF4D3C">/bg.php?&montant=69&goal=100&couleur=FF4D3C</a></p>
   <p>Auto-refresh de la page toutes les 2 minutes</p>
   <p>Repository : <a href="https://github.com/KhaosFarbauti/Badge-Goal">https://github.com/KhaosFarbauti/Badge-Goal</a></p>
   
