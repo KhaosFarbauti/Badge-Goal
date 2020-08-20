@@ -25,6 +25,22 @@
 		unset($raw);
 		unset($json);
 	}
+	
+	if (isset($_GET["twitch_id"])){
+		$twitch_id = htmlspecialchars($_GET["twitch_id"]);
+		set_error_handler(function() { /* pour catcher le warning */ });
+		$raw = file_get_contents("https://twitchtracker.com/".$twitch_id."/subscribers");
+		restore_error_handler();
+		$dom = new DOMDocument;
+		set_error_handler(function() { /* pour catcher les warnings */ });
+		$dom->loadHTML($raw);
+		restore_error_handler();
+		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(55)->nodeValue)*2.49);   //Tier 1
+		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(58)->nodeValue)*4.99);   //Tier 2
+		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(61)->nodeValue)*12.49);   //Tier 3
+		unset($raw);
+		unset($dom);
+	}
 		
 	if (isset($_GET["montant"])){		
 		$montant = intval(htmlspecialchars($_GET["montant"]));
@@ -51,7 +67,11 @@
 	}
 
 	if ($pourcentage == 1){
-		$montant = intval($montant / $goal * 100)."%";
+		if ($goal > 0){
+			$montant = intval($montant / $goal * 100)."%";
+		} else {
+			$montant = "0%";
+		}
 	} else if (isset($_GET["label"])){
 			$montant = htmlspecialchars($_GET["label"]);
 		} else {
@@ -66,8 +86,9 @@
 	
 // montant : montant actuel (si defini remplace tipeee/utip)
 // goal : montant 100%
-// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)
-// utip_id : recupere le montant sur la page tipeee correspondante (additionne avec tipeee si defini)
+// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)
+// utip_id : recupere le montant sur la page utip correspondante (additionne avec tipeee/twitch si defini)
+// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec tipeee/utip si defini)
 // couleur : couleur du badge en hexa (sans le '#' devant)
 // label : remplace le montant en € par un texte
 // Type : change l'apparence
@@ -170,8 +191,9 @@ body {
   <ul>
   <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
   <li>goal : montant objectif</li>
-  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip si defini)</li>
-  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee si defini)</li>
+  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)</li>
+  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee/twitch si defini)</li>
+  <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec tipeee/uTip si defini)</li>
   <li>pourcentage : si definit a 1, remplace le montant par un pourcentage</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
