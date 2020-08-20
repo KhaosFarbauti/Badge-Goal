@@ -83,6 +83,13 @@
 	} else {
 		$type = 0;
 	}
+
+	if (isset($_GET["notext"])){
+		$notext = intval(htmlspecialchars($_GET["notext"]));
+	} else {
+		$notext = 0;
+	}
+
 	
 // montant : montant actuel (si defini remplace tipeee/utip)
 // goal : montant 100%
@@ -93,6 +100,7 @@
 // label : remplace le montant en € par un texte
 // Type : change l'apparence
 // Pourcentage : si 1, remplace le montant par un pourcentage
+// notext : masque les explications
 
 
 ?>
@@ -186,6 +194,7 @@ body {
       <div class="inside-circle"><?php echo $montant ?></div>
     </div>
   </div>
+  <?php if ($notext != 1){ ?>
   <br />
   <p>Variables de l'url :<br /></p>
   <ul>
@@ -198,10 +207,11 @@ body {
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
+  <li>notext : si definit a 1, masque les explications</li>
   </ul>
   <p>Exemple : <a href="bg.php?&montant=69&goal=100&couleur=FF4D3C">/bg.php?&montant=69&goal=100&couleur=FF4D3C</a></p>
   <p>Auto-refresh de la page toutes les 2 minutes</p>
   <p>Repository : <a href="https://github.com/KhaosFarbauti/Badge-Goal">https://github.com/KhaosFarbauti/Badge-Goal</a></p>
-  
+  <?php } ?>
 </body>
 </html>
