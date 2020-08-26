@@ -4,10 +4,10 @@
 	
 	ini_set('default_socket_timeout', 20);
 	
-	if (isset($_GET["tipeee_id"])){
-		$tipeee_id = htmlspecialchars($_GET["tipeee_id"]);
+	if (isset($_GET['tipeee_id'])){
+		$tipeee_id = htmlspecialchars($_GET['tipeee_id']);
 		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents("https://api.tipeee.com/v2.0/projects/".$tipeee_id);
+		$raw = file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
 		restore_error_handler();
 		$json = json_decode($raw);
 		$montant = $montant + intval($json->parameters->tipperAmount);
@@ -15,10 +15,10 @@
 		unset($json);
 	}
 	
-	if (isset($_GET["utip_id"])){
-		$tipeee_id = htmlspecialchars($_GET["utip_id"]);
+	if (isset($_GET['utip_id'])){
+		$tipeee_id = htmlspecialchars($_GET['utip_id']);
 		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents("https://www.utip.io/creator/profile/stats/".$utip_id."/earned");
+		$raw = file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
 		restore_error_handler();
 		$json = json_decode($raw);
 		$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
@@ -26,27 +26,27 @@
 		unset($json);
 	}
 	
-	if (isset($_GET["twitch_id"])){
-		$twitch_id = htmlspecialchars($_GET["twitch_id"]);
+	if (isset($_GET['twitch_id'])){
+		$twitch_id = htmlspecialchars($_GET['twitch_id']);
 		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents("https://twitchtracker.com/".$twitch_id."/subscribers");
+		$raw = file_get_contents('https://twitchtracker.com/'.$twitch_id.'/subscribers');
 		restore_error_handler();
 		$dom = new DOMDocument;
 		set_error_handler(function() { /* pour catcher les warnings */ });
 		$dom->loadHTML($raw);
 		restore_error_handler();
-		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(55)->nodeValue)*2.49);   //Tier 1
-		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(58)->nodeValue)*4.99);   //Tier 2
-		$montant = $montant + intval(intval($dom->getElementsByTagName("div")->item(61)->nodeValue)*12.49);   //Tier 3
+		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(55)->nodeValue)*2.49);   //Tier 1
+		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(58)->nodeValue)*4.99);   //Tier 2
+		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(61)->nodeValue)*12.49);   //Tier 3
 		unset($raw);
 		unset($dom);
 	}
 		
-	if (isset($_GET["montant"])){		
-		$montant = intval(htmlspecialchars($_GET["montant"]));
+	if (isset($_GET['montant'])){		
+		$montant = intval(htmlspecialchars($_GET['montant']));
 	}
 	
-	$goal = intval(htmlspecialchars($_GET["goal"]));
+	$goal = intval(htmlspecialchars($_GET['goal']));
 	if ($goal > 0){
 		$facteur_deg = $montant / $goal * 180;
 	} else {
@@ -54,38 +54,38 @@
 	}
 	if ($facteur_deg > 180) $facteur_deg = 180;
 	
-	if (isset($_GET["couleur"])){
-		$couleur = htmlspecialchars($_GET["couleur"]);
+	if (isset($_GET['couleur'])){
+		$couleur = htmlspecialchars($_GET['couleur']);
 	} else {
-		$couleur = "9e00b1";
+		$couleur = '9e00b1';
 	}
 
-	if (isset($_GET["pourcentage"])){
-		$pourcentage = intval(htmlspecialchars($_GET["pourcentage"]));
+	if (isset($_GET['pourcentage'])){
+		$pourcentage = intval(htmlspecialchars($_GET['pourcentage']));
 	} else {
 		$pourcentage = 0;
 	}
 
-	if ($pourcentage == 1){
+	if ($pourcentage === 1){
 		if ($goal > 0){
-			$montant = intval($montant / $goal * 100)."%";
+			$montant = intval($montant / $goal * 100).'%';
 		} else {
-			$montant = "0%";
+			$montant = '0%';
 		}
-	} else if (isset($_GET["label"])){
-			$montant = htmlspecialchars($_GET["label"]);
+	} else if (isset($_GET['label'])){
+			$montant = htmlspecialchars($_GET['label']);
 		} else {
-			$montant = $montant."€";
+			$montant = $montant.'€';
 	}
 
-	if (isset($_GET["type"])){
-		$type = intval(htmlspecialchars($_GET["type"]));
+	if (isset($_GET['type'])){
+		$type = intval(htmlspecialchars($_GET['type']));
 	} else {
 		$type = 0;
 	}
 
-	if (isset($_GET["notext"])){
-		$notext = intval(htmlspecialchars($_GET["notext"]));
+	if (isset($_GET['notext'])){
+		$notext = intval(htmlspecialchars($_GET['notext']));
 	} else {
 		$notext = 0;
 	}
@@ -129,7 +129,7 @@ body {
   margin: 50px auto;
   width: 150px;
   height: 150px;
-  background: <?php if ($type == 1){echo "transparent";} else {echo "#e6e2e7";} ?>;
+  background: <?php if ($type === 1){echo 'transparent';} else {echo '#e6e2e7';} ?>;
   border-radius: 50%;
 }
 
@@ -169,7 +169,7 @@ body {
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  background: <?php if ($type == 1){echo "#34495e;\n color: #ecf0f1";} else {echo "#fffffff0";} ?>;
+  background: <?php if ($type === 1){echo '#34495e;color: #ecf0f1';} else {echo '#fffffff0';} ?>;
   line-height: 130px;
   text-align: center;
   margin-top: 10px;
