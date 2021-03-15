@@ -45,6 +45,10 @@
 	if (isset($_GET['montant'])){		
 		$montant = intval(htmlspecialchars($_GET['montant']));
 	}
+
+	if (isset($_GET['ajout'])){
+		$montant = $montant + intval(htmlspecialchars($_GET['ajout']));
+	}
 	
 	$goal = intval(htmlspecialchars($_GET['goal']));
 	if ($goal > 0){
@@ -101,6 +105,7 @@
 // Type : change l'apparence
 // Pourcentage : si 1, remplace le montant par un pourcentage
 // notext : masque les explications
+// ajout : pour ajouter un montant manuel en plus
 
 
 ?>
@@ -203,6 +208,7 @@ body {
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)</li>
   <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee/twitch si defini)</li>
   <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec tipeee/uTip si defini)</li>
+  <li>ajout : ajoute un montant supplementaire manuellement</li>
   <li>pourcentage : si definit a 1, remplace le montant par un pourcentage</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
