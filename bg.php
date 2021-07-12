@@ -1,45 +1,62 @@
 <?php 
 
 	$montant = 0;
+	$erreur = false;
+	$taux = 1;
 	
 	ini_set('default_socket_timeout', 20);
-	
-	if (isset($_GET['tipeee_id'])){
-		$tipeee_id = htmlspecialchars($_GET['tipeee_id']);
-		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
-		restore_error_handler();
+		
+	// taux de change dollar->euro
+	$raw = @file_get_contents("https://api.exchangerate-api.com/v4/latest/USD");
+	if($raw === false){
+		$erreur = true;
+	}else{
 		$json = json_decode($raw);
-		$montant = $montant + intval($json->parameters->tipperAmount);
-		unset($raw);
+		$taux = $json->rates->EUR;
 		unset($json);
 	}
-	
-	if (isset($_GET['utip_id'])){
-		$tipeee_id = htmlspecialchars($_GET['utip_id']);
-		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
-		restore_error_handler();
-		$json = json_decode($raw);
-		$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
+	unset($raw);
+
+	if (isset($_GET['tipeee_id'])){
+		$tipeee_id = htmlspecialchars($_GET['tipeee_id']);
+		$raw = @file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$json = json_decode($raw);
+			$montant = $montant + intval($json->parameters->tipperAmount);
+			unset($json);
+		}
 		unset($raw);
-		unset($json);
+	}
+
+	if (isset($_GET['utip_id'])){
+		$utip_id = htmlspecialchars($_GET['utip_id']);
+		$raw = @file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$json = json_decode($raw);
+			$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
+			unset($json);
+		}
+		unset($raw);
 	}
 	
 	if (isset($_GET['twitch_id'])){
 		$twitch_id = htmlspecialchars($_GET['twitch_id']);
-		set_error_handler(function() { /* pour catcher le warning */ });
-		$raw = file_get_contents('https://twitchtracker.com/'.$twitch_id.'/subscribers');
-		restore_error_handler();
-		$dom = new DOMDocument;
-		set_error_handler(function() { /* pour catcher les warnings */ });
-		$dom->loadHTML($raw);
-		restore_error_handler();
-		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(55)->nodeValue)*2.49);   //Tier 1
-		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(58)->nodeValue)*4.99);   //Tier 2
-		$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(61)->nodeValue)*12.49);   //Tier 3
+		$raw = @file_get_contents('https://twitchtracker.com/'.$twitch_id.'/subscribers');
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$dom = new DOMDocument;
+			@$dom->loadHTML($raw);
+			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(55)->nodeValue)*round((2.49 * $taux), 2));   //Tier 1
+			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(58)->nodeValue)*round((4.99 * $taux), 2));   //Tier 2
+			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(61)->nodeValue)*round((12.49 * $taux), 2));   //Tier 3
+			unset($dom);
+		}
 		unset($raw);
-		unset($dom);
 	}
 		
 	if (isset($_GET['montant'])){		
@@ -94,6 +111,10 @@
 		$notext = 0;
 	}
 
+	if ($erreur){
+		unset($montant);
+		$montant="ERR";
+	}
 	
 // montant : montant actuel (si defini remplace tipeee/utip)
 // goal : montant 100%
