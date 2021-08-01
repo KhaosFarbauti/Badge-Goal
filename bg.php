@@ -4,7 +4,7 @@
 	$erreur = false;
 	$taux = 1;
 	
-	ini_set('default_socket_timeout', 20);
+	ini_set('default_socket_timeout', 30);
 		
 	// taux de change dollar->euro
 	$raw = @file_get_contents("https://api.exchangerate-api.com/v4/latest/USD");
@@ -133,7 +133,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<META HTTP-EQUIV="refresh" CONTENT="120">
+	<META HTTP-EQUIV="refresh" CONTENT="300">
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
@@ -237,7 +237,7 @@ body {
   <li>notext : si definit a 1, masque les explications</li>
   </ul>
   <p>Exemple : <a href="bg.php?&montant=69&goal=100&couleur=FF4D3C">/bg.php?&montant=69&goal=100&couleur=FF4D3C</a></p>
-  <p>Auto-refresh de la page toutes les 2 minutes</p>
+  <p>Auto-refresh de la page toutes les 5 minutes</p>
   <p>Repository : <a href="https://github.com/KhaosFarbauti/Badge-Goal">https://github.com/KhaosFarbauti/Badge-Goal</a></p>
   <?php } ?>
 </body>
