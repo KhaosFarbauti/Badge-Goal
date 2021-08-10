@@ -1,21 +1,19 @@
 <?php 
 
+	ini_set('display_errors', '1');
+	ini_set('display_startup_errors', '1');
+	error_reporting(E_ALL);
+
 	$montant = 0;
 	$erreur = false;
-	$taux = 1;
 	
 	ini_set('default_socket_timeout', 30);
 		
-	// taux de change dollar->euro
-	$raw = @file_get_contents("https://api.exchangerate-api.com/v4/latest/USD");
-	if($raw === false){
-		$erreur = true;
-	}else{
-		$json = json_decode($raw);
-		$taux = $json->rates->EUR;
-		unset($json);
+	if (isset($_GET['debug'])){
+		$debug = true;
+	} else {
+		$debug = false;
 	}
-	unset($raw);
 
 	if (isset($_GET['tipeee_id'])){
 		$tipeee_id = htmlspecialchars($_GET['tipeee_id']);
@@ -24,6 +22,9 @@
 			$erreur = true;
 		}else{
 			$json = json_decode($raw);
+			if ($debug){
+				echo "tipeee = ".intval($json->parameters->tipperAmount)."\n";
+			}
 			$montant = $montant + intval($json->parameters->tipperAmount);
 			unset($json);
 		}
@@ -37,6 +38,9 @@
 			$erreur = true;
 		}else{
 			$json = json_decode($raw);
+			if ($debug){
+				echo "utip = ".intval(intval($json->stats->amountEarned) / 100)."\n";
+			}
 			$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
 			unset($json);
 		}
@@ -51,10 +55,18 @@
 		}else{
 			$dom = new DOMDocument;
 			@$dom->loadHTML($raw);
-			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(55)->nodeValue)*round((2.49 * $taux), 2));   //Tier 1
-			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(58)->nodeValue)*round((4.99 * $taux), 2));   //Tier 2
-			$montant = $montant + intval(intval($dom->getElementsByTagName('div')->item(61)->nodeValue)*round((12.49 * $taux), 2));   //Tier 3
+			$classname="g-x-s-value to-number";
+			$finder = new DomXPath($dom);
+			if ($debug){
+				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99)."\n";
+				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99)."\n";
+				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99)."\n";
+			}
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99);   //Tier 1
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99);   //Tier 2
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99);   //Tier 3
 			unset($dom);
+			unset($finder);
 		}
 		unset($raw);
 	}
@@ -67,7 +79,11 @@
 		$montant = $montant + intval(htmlspecialchars($_GET['ajout']));
 	}
 	
-	$goal = intval(htmlspecialchars($_GET['goal']));
+	if (isset($_GET['goal'])){
+		$goal = intval(htmlspecialchars($_GET['goal']));
+	}else{
+		$goal = 0;
+	}
 	if ($goal > 0){
 		$facteur_deg = $montant / $goal * 180;
 	} else {
