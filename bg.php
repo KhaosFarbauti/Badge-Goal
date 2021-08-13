@@ -6,6 +6,7 @@
 
 	$montant = 0;
 	$erreur = false;
+	$split = 0.5;
 	
 	ini_set('default_socket_timeout', 30);
 		
@@ -58,13 +59,13 @@
 			$classname="g-x-s-value to-number";
 			$finder = new DomXPath($dom);
 			if ($debug){
-				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99)."\n";
-				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99)."\n";
-				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99)."\n";
+				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split)."\n";
+				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split)."\n";
+				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split)."\n";
 			}
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99);   //Tier 1
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99);   //Tier 2
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99);   //Tier 3
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split);   //Tier 1
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split);   //Tier 2
+			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split);   //Tier 3
 			unset($dom);
 			unset($finder);
 		}
