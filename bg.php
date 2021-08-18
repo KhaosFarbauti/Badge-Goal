@@ -4,20 +4,44 @@
 	ini_set('display_startup_errors', '1');
 	error_reporting(E_ALL);
 
-	$montant = 0;
-	$erreur = false;
-	$split = 0.5;
-	
 	ini_set('default_socket_timeout', 30);
-		
-	if (isset($_GET['debug'])){
-		$debug = true;
-	} else {
-		$debug = false;
-	}
+	
+	$erreur = false;
 
-	if (isset($_GET['tipeee_id'])){
-		$tipeee_id = htmlspecialchars($_GET['tipeee_id']);
+	$split = 0.5;
+
+/***********  RECUPERATION DES PARAMETRES  *******************************************************************/	
+// debug : si defini, affiche le detail des montants
+// goal : montant 100%
+// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)
+// utip_id : recupere le montant sur la page utip correspondante (additionne avec tipeee/twitch si defini)
+// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec tipeee/utip si defini)
+// montant : montant actuel (si defini remplace tipeee/utip)
+// ajout : pour ajouter un montant manuel en plus
+// couleur : couleur du badge en hexa (sans le '#' devant)
+// type : change l'apparence
+// label : remplace le montant en € par le label
+// pourcentage : remplace le montant par un pourcentage
+// notext : masque les explications
+
+	$debug = (isset($_GET['debug'])) ? true : false;
+
+	$tipeee_id = (isset($_GET['tipeee_id'])) ? htmlspecialchars($_GET['tipeee_id']) : false;
+	$utip_id = (isset($_GET['utip_id'])) ? htmlspecialchars($_GET['utip_id']) : false;
+	$twitch_id = (isset($_GET['twitch_id'])) ? htmlspecialchars($_GET['twitch_id']) : false;
+
+	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : 0;
+	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
+	$goal = (isset($_GET['goal'])) ? intval(htmlspecialchars($_GET['goal'])) : 0;
+
+	$couleur = (isset($_GET['couleur'])) ? htmlspecialchars($_GET['couleur']) : '9e00b1';
+	$type = (isset($_GET['type'])) ? intval(htmlspecialchars($_GET['type'])) : 0; 
+
+	$notext = (isset($_GET['notext'])) ? true : false;
+	
+/*************************************************************************************************************/
+
+	if ($tipeee_id){
 		$raw = @file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
 		if($raw === false){
 			$erreur = true;
@@ -32,8 +56,7 @@
 		unset($raw);
 	}
 
-	if (isset($_GET['utip_id'])){
-		$utip_id = htmlspecialchars($_GET['utip_id']);
+	if ($utip_id){
 		$raw = @file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
 		if($raw === false){
 			$erreur = true;
@@ -48,8 +71,7 @@
 		unset($raw);
 	}
 	
-	if (isset($_GET['twitch_id'])){
-		$twitch_id = htmlspecialchars($_GET['twitch_id']);
+	if ($twitch_id){
 		$raw = @file_get_contents('https://twitchtracker.com/'.$twitch_id.'/subscribers');
 		if($raw === false){
 			$erreur = true;
@@ -71,81 +93,20 @@
 		}
 		unset($raw);
 	}
-		
-	if (isset($_GET['montant'])){		
-		$montant = intval(htmlspecialchars($_GET['montant']));
-	}
 
-	if (isset($_GET['ajout'])){
-		$montant = $montant + intval(htmlspecialchars($_GET['ajout']));
-	}
-	
-	if (isset($_GET['goal'])){
-		$goal = intval(htmlspecialchars($_GET['goal']));
-	}else{
-		$goal = 0;
-	}
-	if ($goal > 0){
-		$facteur_deg = $montant / $goal * 180;
-	} else {
-		$facteur_deg = 0;
-	}
+	$facteur_deg = ($goal > 0) ? $montant / $goal * 180 : 0;
 	if ($facteur_deg > 180) $facteur_deg = 180;
 	
-	if (isset($_GET['couleur'])){
-		$couleur = htmlspecialchars($_GET['couleur']);
-	} else {
-		$couleur = '9e00b1';
-	}
-
 	if (isset($_GET['pourcentage'])){
-		$pourcentage = intval(htmlspecialchars($_GET['pourcentage']));
-	} else {
-		$pourcentage = 0;
-	}
-
-	if ($pourcentage === 1){
-		if ($goal > 0){
-			$montant = intval($montant / $goal * 100).'%';
-		} else {
-			$montant = '0%';
-		}
-	} else if (isset($_GET['label'])){
-			$montant = htmlspecialchars($_GET['label']);
-		} else {
-			$montant = $montant.'€';
-	}
-
-	if (isset($_GET['type'])){
-		$type = intval(htmlspecialchars($_GET['type']));
-	} else {
-		$type = 0;
-	}
-
-	if (isset($_GET['notext'])){
-		$notext = intval(htmlspecialchars($_GET['notext']));
-	} else {
-		$notext = 0;
+		$montant = ($goal > 0) ? intval($montant / $goal * 100).'%' : '0%';
+	}else{
+		$montant = (isset($_GET['label'])) ? htmlspecialchars($_GET['label']) : $montant.'€';
 	}
 
 	if ($erreur){
 		unset($montant);
 		$montant="ERR";
 	}
-	
-// montant : montant actuel (si defini remplace tipeee/utip)
-// goal : montant 100%
-// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)
-// utip_id : recupere le montant sur la page utip correspondante (additionne avec tipeee/twitch si defini)
-// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec tipeee/utip si defini)
-// couleur : couleur du badge en hexa (sans le '#' devant)
-// label : remplace le montant en € par un texte
-// Type : change l'apparence
-// Pourcentage : si 1, remplace le montant par un pourcentage
-// notext : masque les explications
-// ajout : pour ajouter un montant manuel en plus
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -237,7 +198,7 @@ body {
       <div class="inside-circle"><?php echo $montant ?></div>
     </div>
   </div>
-  <?php if ($notext != 1){ ?>
+  <?php if (!$notext){ ?>
   <br />
   <p>Variables de l'url :<br /></p>
   <ul>
@@ -247,11 +208,11 @@ body {
   <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee/twitch si defini)</li>
   <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec tipeee/uTip si defini)</li>
   <li>ajout : ajoute un montant supplementaire manuellement</li>
-  <li>pourcentage : si definit a 1, remplace le montant par un pourcentage</li>
+  <li>pourcentage : si defini, remplace le montant par un pourcentage</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
   <li>label : remplace le montant en € par un texte</li>
   <li>type : 0 ou 1 pour changer l'apparence (par défaut 0)</li>
-  <li>notext : si definit a 1, masque les explications</li>
+  <li>notext : si defini, masque les explications</li>
   </ul>
   <p>Exemple : <a href="bg.php?&montant=69&goal=100&couleur=FF4D3C">/bg.php?&montant=69&goal=100&couleur=FF4D3C</a></p>
   <p>Auto-refresh de la page toutes les 5 minutes</p>
