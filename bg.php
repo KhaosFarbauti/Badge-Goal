@@ -98,7 +98,8 @@
 	if ($facteur_deg > 180) $facteur_deg = 180;
 	
 	if (isset($_GET['pourcentage'])){
-		$montant = ($goal > 0) ? intval($montant / $goal * 100).'%' : '0%';
+		$montant = ($goal > 0) ? intval($montant / $goal * 100) : 0;
+		$montant = ($montant > 100) ? "FAIT !" : $montant.'%';
 	}else{
 		$montant = (isset($_GET['label'])) ? htmlspecialchars($_GET['label']) : $montant.'€';
 	}
