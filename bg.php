@@ -34,7 +34,7 @@
 	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
 	$goal = (isset($_GET['goal'])) ? intval(htmlspecialchars($_GET['goal'])) : 0;
 
-	$couleur = (isset($_GET['couleur'])) ? htmlspecialchars($_GET['couleur']) : '9e00b1';
+	$couleur = (isset($_GET['couleur'])) ? substr(htmlspecialchars($_GET['couleur']),0,6) : '9e00b1';
 	$type = (isset($_GET['type'])) ? intval(htmlspecialchars($_GET['type'])) : 0; 
 
 	$notext = (isset($_GET['notext'])) ? true : false;
