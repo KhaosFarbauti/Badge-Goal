@@ -13,9 +13,12 @@
 /***********  RECUPERATION DES PARAMETRES  *******************************************************************/	
 // debug : si defini, affiche le detail des montants
 // goal : montant 100%
-// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)
-// utip_id : recupere le montant sur la page utip correspondante (additionne avec tipeee/twitch si defini)
-// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec tipeee/utip si defini)
+// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)
+// utip_id : recupere le montant sur la page utip correspondante (additionne avec les autres si definis)
+// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
+// tipeeestream_id : recupere le montant des donations sur la page tipeeestream correspondante (additionne avec les autres si definis)
+// tipeeestream_token : token authentification necessaire pour tipeeestream
+// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
 // montant : montant actuel (si defini remplace tipeee/utip)
 // ajout : pour ajouter un montant manuel en plus
 // couleur : couleur du badge en hexa (sans le '#' devant)
@@ -29,6 +32,8 @@
 	$tipeee_id = (isset($_GET['tipeee_id'])) ? htmlspecialchars($_GET['tipeee_id']) : false;
 	$utip_id = (isset($_GET['utip_id'])) ? htmlspecialchars($_GET['utip_id']) : false;
 	$twitch_id = (isset($_GET['twitch_id'])) ? htmlspecialchars($_GET['twitch_id']) : false;
+	$tipeeestream_id = (isset($_GET['tipeeestream_id'])) ? htmlspecialchars($_GET['tipeeestream_id']) : false;
+	$tipeeestream_token = (isset($_GET['tipeeestream_token'])) ? htmlspecialchars($_GET['tipeeestream_token']) : false;
 
 	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : 0;
 	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
@@ -93,6 +98,27 @@
 		}
 		unset($raw);
 	}
+	
+	if ($tipeeestream_token && $tipeeestream_id){
+		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=500&offset=0&type[]=donation&start='.date("Y-m-01"));
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$json = json_decode($raw);
+			$tipeeestream_dons = 0;
+			foreach ($json->datas->events as $events){
+				$tipeeestream_dons += $events->parameters->amount;
+			}	
+			unset($events);
+			if ($debug){
+				echo "tipeeestream (dons) = ".intval($tipeeestream_dons)."\n";
+			}
+			$montant = $montant + intval($tipeeestream_dons);
+			unset($json);
+			unset($tipeeestream_dons);
+		}
+		unset($raw);
+	}
 
 	$facteur_deg = ($goal > 0) ? $montant / $goal * 180 : 0;
 	if ($facteur_deg > 180) $facteur_deg = 180;
@@ -105,8 +131,7 @@
 	}
 
 	if ($erreur){
-		unset($montant);
-		$montant="ERR";
+		$montant="~".$montant;
 	}
 ?>
 <!DOCTYPE html>
@@ -205,9 +230,11 @@ body {
   <ul>
   <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
   <li>goal : montant objectif</li>
-  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec utip/twitch si defini)</li>
-  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec tipeee/twitch si defini)</li>
-  <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec tipeee/uTip si defini)</li>
+  <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)</li>
+  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec les autres si definis)</li>
+  <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec les autres si definis)</li>
+  <li>tipeeestream_id : recupere le montant des donations sur la page tipeeestream correspondante (additionne avec les autres si definis)</li>
+  <li>tipeeestream_token : token authentification necessaire pour tipeeestream</li>
   <li>ajout : ajoute un montant supplementaire manuellement</li>
   <li>pourcentage : si defini, remplace le montant par un pourcentage</li>
   <li>couleur : couleur du badge en hexa (sans le '#' devant)</li>
