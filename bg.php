@@ -77,7 +77,27 @@
 	}
 	
 	if ($twitch_id){
-		$raw = @file_get_contents('https://twitchtracker.com/'.$twitch_id.'/subscribers');
+		$target = 'https://twitchtracker.com/'.$twitch_id.'/subscribers';
+
+		$user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36';
+		$ckfile = tempnam (".", "targetwebpagecookie.txt");
+		$ch = curl_init($target);
+		curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+		curl_setopt($ch, CURLOPT_URL, $target);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+		curl_setopt($ch, CURLOPT_FAILONERROR, TRUE);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 4);
+		curl_setopt($ch, CURLOPT_COOKIESESSION, TRUE);
+		curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_ENCODING, "");
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+		$raw = curl_exec($ch);
+		curl_close($ch);
+		unlink($ckfile);
+
 		if($raw === false){
 			$erreur = true;
 		}else{
