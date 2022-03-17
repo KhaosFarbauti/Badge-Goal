@@ -35,8 +35,7 @@
 	$tipeeestream_id = (isset($_GET['tipeeestream_id'])) ? htmlspecialchars($_GET['tipeeestream_id']) : false;
 	$tipeeestream_token = (isset($_GET['tipeeestream_token'])) ? htmlspecialchars($_GET['tipeeestream_token']) : false;
 
-	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : 0;
-	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
+	$montant = 0;
 	$goal = (isset($_GET['goal'])) ? intval(htmlspecialchars($_GET['goal'])) : 0;
 
 	$couleur = (isset($_GET['couleur'])) ? substr(htmlspecialchars($_GET['couleur']),0,6) : '9e00b1';
@@ -139,6 +138,9 @@
 		}
 		unset($raw);
 	}
+
+	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : $montant;
+	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
 
 	$facteur_deg = ($goal > 0) ? $montant / $goal * 180 : 0;
 	if ($facteur_deg > 180) $facteur_deg = 180;
@@ -248,7 +250,7 @@ body {
   <br />
   <p>Variables de l'url :<br /></p>
   <ul>
-  <li>montant : montant actuel (si defini remplace tipeee/utip)</li>
+  <li>montant : montant actuel (si defini remplace tipeee/utip/twitch/... mais conserve "ajout")</li>
   <li>goal : montant objectif</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)</li>
   <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec les autres si definis)</li>
