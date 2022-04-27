@@ -60,6 +60,8 @@
 		unset($raw);
 	}
 
+/* utip a change son api, on n'accede plus a l'info en mode non authentifie
+
 	if ($utip_id){
 		$raw = @file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
 		if($raw === false){
@@ -74,6 +76,7 @@
 		}
 		unset($raw);
 	}
+*/
 	
 	if ($twitch_id){
 		$target = 'https://twitchtracker.com/'.$twitch_id.'/subscribers';
@@ -253,7 +256,6 @@ body {
   <li>montant : montant actuel (si defini remplace tipeee/utip/twitch/... mais conserve "ajout")</li>
   <li>goal : montant objectif</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)</li>
-  <li>utip_id : recupere le montant sur la page uTip correspondante (additionne avec les autres si definis)</li>
   <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec les autres si definis)</li>
   <li>tipeeestream_id : recupere le montant des donations sur la page tipeeestream correspondante (additionne avec les autres si definis)</li>
   <li>tipeeestream_token : token authentification necessaire pour tipeeestream</li>
