@@ -105,6 +105,13 @@
 		}else{
 			$dom = new DOMDocument;
 			@$dom->loadHTML($raw);
+			$classname="to-number";
+			$finder = new DomXPath($dom);
+			if ($debug){
+				echo "current active = ".intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*3.99*$split)."\n";
+			}
+			$choixa = intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*3.99*$split);
+			unset($finder);
 			$classname="g-x-s-value to-number";
 			$finder = new DomXPath($dom);
 			if ($debug){
@@ -112,11 +119,12 @@
 				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split)."\n";
 				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split)."\n";
 			}
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split);   //Tier 1
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split);   //Tier 2
-			$montant = $montant + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split);   //Tier 3
+			$choixb = intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split);
+			$montant = $montant + max($choixa, $choixb);
 			unset($dom);
 			unset($finder);
+			unset($choixa);
+			unset($choixb);
 		}
 		unset($raw);
 	}
