@@ -9,6 +9,9 @@
 	$erreur = false;
 
 	$split = 0.5;
+	$tier1 = 3.99;
+	$tier2 = 7.99;
+	$tier3 = 19.99;
 
 /***********  RECUPERATION DES PARAMETRES  *******************************************************************/	
 // debug : si defini, affiche le detail des montants
@@ -16,7 +19,7 @@
 // tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)
 // utip_id : recupere le montant sur la page utip correspondante (additionne avec les autres si definis)
 // twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
-// tipeeestream_id : recupere le montant des donations sur la page tipeeestream correspondante (additionne avec les autres si definis)
+// tipeeestream_id : recupere le montant des donations et subs sur la page tipeeestream correspondante (additionne avec les autres si definis)
 // tipeeestream_token : token authentification necessaire pour tipeeestream
 // twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
 // montant : montant actuel (si defini remplace tipeee/utip)
@@ -108,23 +111,40 @@
 			$classname="to-number";
 			$finder = new DomXPath($dom);
 			if ($debug){
-				echo "current active = ".intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*3.99*$split)."\n";
+				echo "current active = ".intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*$tier1*$split)."\n";
 			}
-			$choixa = intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*3.99*$split);
+			$choixa = intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*$tier1*$split);
 			unset($finder);
 			$classname="g-x-s-value to-number";
 			$finder = new DomXPath($dom);
 			if ($debug){
-				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split)."\n";
-				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split)."\n";
-				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split)."\n";
+				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*$tier1*$split)."\n";
+				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*$tier2*$split)."\n";
+				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*$tier3*$split)."\n";
 			}
-			$choixb = intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*3.99*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*7.99*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*19.99*$split);
+			$choixb = intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*$tier1*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*$tier2*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*$tier3*$split);
 			$montant = $montant + max($choixa, $choixb);
 			unset($dom);
 			unset($finder);
 			unset($choixa);
 			unset($choixb);
+		}
+		unset($raw);
+	}
+
+	if ($tipeeestream_token){
+		$raw = @file_get_contents('https://api.tipeeestream.com/v1.0/events/forever.json?apiKey='.$tipeeestream_token);
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$json = json_decode($raw);
+			$tipeeestream_sub = $json->datas->details->twitch->subscribers;
+			if ($debug){
+				echo "tipeeestream (sub) = ".intval($tipeeestream_sub*$tier1*$split)."\n";
+			}
+			$montant = $montant + intval($tipeeestream_sub*$tier1*$split);
+			unset($json);
+			unset($tipeeestream_dons);
 		}
 		unset($raw);
 	}
@@ -265,7 +285,7 @@ body {
   <li>goal : montant objectif</li>
   <li>tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)</li>
   <li>twitch_id : recupere le montant des subs twitchs (via le site <a href="https://twitchtracker.com">Twich Tracker</a>) du streamer correspondant (additionne avec les autres si definis)</li>
-  <li>tipeeestream_id : recupere le montant des donations sur la page tipeeestream correspondante (additionne avec les autres si definis)</li>
+  <li>tipeeestream_id : recupere le montant des donations et subs sur la page tipeeestream correspondante (additionne avec les autres si definis)</li>
   <li>tipeeestream_token : token authentification necessaire pour tipeeestream</li>
   <li>ajout : ajoute un montant supplementaire manuellement</li>
   <li>pourcentage : si defini, remplace le montant par un pourcentage</li>
