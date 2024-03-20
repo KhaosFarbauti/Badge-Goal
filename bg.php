@@ -12,6 +12,7 @@
 	$tier1 = 3.99;
 	$tier2 = 7.99;
 	$tier3 = 19.99;
+	$bits  = 0.0159;
 
 /***********  RECUPERATION DES PARAMETRES  *******************************************************************/	
 // debug : si defini, affiche le detail des montants
@@ -46,7 +47,12 @@
 
 	$notext = (isset($_GET['notext'])) ? true : false;
 	
+	$date_depart = (isset($_GET['date_depart'])) ? htmlspecialchars($_GET['date_depart']) : date("Y-01-01");
+	
 /*************************************************************************************************************/
+
+
+// Tipeee
 
 	if ($tipeee_id){
 		$raw = @file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
@@ -55,9 +61,9 @@
 		}else{
 			$json = json_decode($raw);
 			if ($debug){
-				echo "tipeee = ".intval($json->parameters->tipperAmount)."\n";
+				echo "tipeee = ".floatval($json->parameters->tipperAmount)."\n";
 			}
-			$montant = $montant + intval($json->parameters->tipperAmount);
+			$montant = $montant + floatval($json->parameters->tipperAmount);
 			unset($json);
 		}
 		unset($raw);
@@ -80,6 +86,8 @@
 		unset($raw);
 	}
 */
+
+// Twitchtracker
 	
 	if ($twitch_id){
 		$target = 'https://twitchtracker.com/'.$twitch_id.'/subscribers';
@@ -132,6 +140,8 @@
 		unset($raw);
 	}
 
+// Tipeeestream
+
 	if ($tipeeestream_token){
 		$raw = @file_get_contents('https://api.tipeeestream.com/v1.0/events/forever.json?apiKey='.$tipeeestream_token);
 		if($raw === false){
@@ -140,17 +150,17 @@
 			$json = json_decode($raw);
 			$tipeeestream_sub = $json->datas->details->twitch->subscribers;
 			if ($debug){
-				echo "tipeeestream (sub) = ".intval($tipeeestream_sub*$tier1*$split)."\n";
+				echo "tipeeestream (sub) = ".floatval($tipeeestream_sub*$tier1*$split)."\n";
 			}
-			$montant = $montant + intval($tipeeestream_sub*$tier1*$split);
+			$montant = $montant + floatval($tipeeestream_sub*$tier1*$split);
 			unset($json);
-			unset($tipeeestream_dons);
+			unset($tipeeestream_sub);
 		}
 		unset($raw);
 	}
 	
 	if ($tipeeestream_token && $tipeeestream_id){
-		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=500&offset=0&type[]=donation&start='.date("Y-m-01"));
+		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=1000&offset=0&type[]=donation&start='.$date_depart);
 		if($raw === false){
 			$erreur = true;
 		}else{
@@ -161,14 +171,38 @@
 			}	
 			unset($events);
 			if ($debug){
-				echo "tipeeestream (dons) = ".intval($tipeeestream_dons)."\n";
+				echo "tipeeestream (dons) = ".floatval($tipeeestream_dons)."\n";
 			}
-			$montant = $montant + intval($tipeeestream_dons);
+			$montant = $montant + floatval($tipeeestream_dons);
 			unset($json);
 			unset($tipeeestream_dons);
 		}
 		unset($raw);
 	}
+
+	if ($tipeeestream_token && $tipeeestream_id){
+		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=1000&offset=0&type[]=cheer&start='.$date_depart);
+		if($raw === false){
+			$erreur = true;
+		}else{
+			$json = json_decode($raw);
+			$tipeeestream_cheers = 0;
+			foreach ($json->datas->events as $events){
+				$tipeeestream_cheers += $events->parameters->cheersSpend;
+			}	
+			unset($events);
+			if ($debug){
+				echo "tipeeestream (cheers) = ".floatval($tipeeestream_cheers*$bits)."\n";
+			}
+			$montant = $montant + floatval($tipeeestream_cheers*$bits);
+			unset($json);
+			unset($tipeeestream_cheers);
+		}
+		unset($raw);
+	}
+
+
+// Calcul final
 
 	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : $montant;
 	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
