@@ -9,7 +9,7 @@
 	$erreur = false;
 
 	$split = 0.5;
-	$tier1 = 3.99;
+	$tier1 = 4.99;
 	$tier2 = 7.99;
 	$tier3 = 19.99;
 	$bits  = 0.0159;
