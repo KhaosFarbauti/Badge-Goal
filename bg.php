@@ -1,236 +1,198 @@
-<?php 
+<?php
 
-	ini_set('display_errors', '1');
-	ini_set('display_startup_errors', '1');
-	error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 
-	ini_set('default_socket_timeout', 30);
-	
-	$erreur = false;
+ini_set('default_socket_timeout', 30);
 
-	$split = 0.5;
-	$tier1 = 4.99;
-	$tier2 = 7.99;
-	$tier3 = 19.99;
-	$bits  = 0.0159;
+$erreur = false;
 
-/***********  RECUPERATION DES PARAMETRES  *******************************************************************/	
-// debug : si defini, affiche le detail des montants
-// goal : montant 100%
-// tipeee_id : recupere le montant sur la page tipeee correspondante (additionne avec les autres si definis)
-// utip_id : recupere le montant sur la page utip correspondante (additionne avec les autres si definis)
-// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
-// tipeeestream_id : recupere le montant des donations et subs sur la page tipeeestream correspondante (additionne avec les autres si definis)
-// tipeeestream_token : token authentification necessaire pour tipeeestream
-// twitch_id : recupere le montant sur la page twitchtracker correspondante (additionne avec les autres si definis)
-// montant : montant actuel (si defini remplace tipeee/utip)
-// ajout : pour ajouter un montant manuel en plus
-// couleur : couleur du badge en hexa (sans le '#' devant)
-// type : change l'apparence
-// label : remplace le montant en € par le label
-// pourcentage : remplace le montant par un pourcentage
-// notext : masque les explications
+/* --------------------------------------------------------------------------
+   CONFIG
+-------------------------------------------------------------------------- */
 
-	$debug = (isset($_GET['debug'])) ? true : false;
+$split = 0.5;
+$tier1 = 4.99;
+$tier2 = 7.99;
+$tier3 = 19.99;
+$bits  = 0.0159;
 
-	$tipeee_id = (isset($_GET['tipeee_id'])) ? htmlspecialchars($_GET['tipeee_id']) : false;
-	$utip_id = (isset($_GET['utip_id'])) ? htmlspecialchars($_GET['utip_id']) : false;
-	$twitch_id = (isset($_GET['twitch_id'])) ? htmlspecialchars($_GET['twitch_id']) : false;
-	$tipeeestream_id = (isset($_GET['tipeeestream_id'])) ? htmlspecialchars($_GET['tipeeestream_id']) : false;
-	$tipeeestream_token = (isset($_GET['tipeeestream_token'])) ? htmlspecialchars($_GET['tipeeestream_token']) : false;
+/* --------------------------------------------------------------------------
+   FONCTIONS UTILES
+-------------------------------------------------------------------------- */
 
-	$montant = 0;
-	$goal = (isset($_GET['goal'])) ? intval(htmlspecialchars($_GET['goal'])) : 0;
+function get_param($name, $filter = FILTER_UNSAFE_RAW, $default = null) {
+    $value = filter_input(INPUT_GET, $name, $filter);
+    return $value !== null ? $value : $default;
+}
 
-	$couleur = (isset($_GET['couleur'])) ? substr(htmlspecialchars($_GET['couleur']),0,6) : '9e00b1';
-	$type = (isset($_GET['type'])) ? intval(htmlspecialchars($_GET['type'])) : 0; 
+function safe_get_json($url, &$errorFlag) {
+    $raw = @file_get_contents($url);
+    if ($raw === false) {
+        $errorFlag = true;
+        return null;
+    }
+    return json_decode($raw);
+}
 
-	$notext = (isset($_GET['notext'])) ? true : false;
-	
-	$date_depart = (isset($_GET['date_depart'])) ? htmlspecialchars($_GET['date_depart']) : date("Y-01-01");
-	
-/*************************************************************************************************************/
+function safe_curl($url, &$errorFlag) {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_USERAGENT      => 'Mozilla/5.0',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_TIMEOUT        => 5,
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_SSL_VERIFYPEER => false
+    ]);
 
+    $raw = curl_exec($ch);
+    if ($raw === false) {
+        $errorFlag = true;
+        curl_close($ch);
+        return null;
+    }
 
-// Tipeee
+    curl_close($ch);
+    return $raw;
+}
 
-	if ($tipeee_id){
-		$raw = @file_get_contents('https://api.tipeee.com/v2.0/projects/'.$tipeee_id);
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$json = json_decode($raw);
-			if ($debug){
-				echo "tipeee = ".floatval($json->parameters->tipperAmount)."\n";
-			}
-			$montant = $montant + floatval($json->parameters->tipperAmount);
-			unset($json);
-		}
-		unset($raw);
-	}
+/* --------------------------------------------------------------------------
+   PARAMÈTRES
+-------------------------------------------------------------------------- */
 
-/* utip a change son api, on n'accede plus a l'info en mode non authentifie
+$debug = isset($_GET['debug']);
 
-	if ($utip_id){
-		$raw = @file_get_contents('https://www.utip.io/creator/profile/stats/'.$utip_id.'/earned');
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$json = json_decode($raw);
-			if ($debug){
-				echo "utip = ".intval(intval($json->stats->amountEarned) / 100)."\n";
-			}
-			$montant = $montant + intval(intval($json->stats->amountEarned) / 100);
-			unset($json);
-		}
-		unset($raw);
-	}
-*/
+$tipeee_id         = get_param('tipeee_id');
+$utip_id           = get_param('utip_id');
+$twitch_id         = get_param('twitch_id');
+$tipeeestream_id   = get_param('tipeeestream_id');
+$tipeeestream_token= get_param('tipeeestream_token');
 
-// Twitchtracker
-	
-	if ($twitch_id){
-		$target = 'https://twitchtracker.com/'.$twitch_id.'/subscribers';
+$goal              = get_param('goal', FILTER_VALIDATE_INT, 0);
+$couleur           = substr(get_param('couleur', FILTER_UNSAFE_RAW, '9e00b1'), 0, 6);
+$type              = get_param('type', FILTER_VALIDATE_INT, 0);
+$notext            = isset($_GET['notext']);
+$date_depart       = get_param('date_depart', FILTER_UNSAFE_RAW, date("Y-01-01"));
 
-		$user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36';
-		$ckfile = tempnam (".", "targetwebpagecookie.txt");
-		$ch = curl_init($target);
-		curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-		curl_setopt($ch, CURLOPT_URL, $target);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-		curl_setopt($ch, CURLOPT_FAILONERROR, TRUE);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
-		curl_setopt($ch, CURLOPT_MAXREDIRS, 4);
-		curl_setopt($ch, CURLOPT_COOKIESESSION, TRUE);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($ch, CURLOPT_ENCODING, "");
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-		$raw = curl_exec($ch);
-		curl_close($ch);
-		unlink($ckfile);
+$montant = 0;
 
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$dom = new DOMDocument;
-			@$dom->loadHTML($raw);
-			$classname="to-number";
-			$finder = new DomXPath($dom);
-			if ($debug){
-				echo "current active = ".intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*$tier1*$split)."\n";
-			}
-			$choixa = intval(intval($finder->query("//span[contains(@class, '$classname')]")->item(0)->nodeValue)*$tier1*$split);
-			unset($finder);
-			$classname="g-x-s-value to-number";
-			$finder = new DomXPath($dom);
-			if ($debug){
-				echo "tier 1 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*$tier1*$split)."\n";
-				echo "tier 2 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*$tier2*$split)."\n";
-				echo "tier 3 = ".intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*$tier3*$split)."\n";
-			}
-			$choixb = intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(3)->nodeValue)*$tier1*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(4)->nodeValue)*$tier2*$split) + intval(intval($finder->query("//div[contains(@class, '$classname')]")->item(5)->nodeValue)*$tier3*$split);
-			$montant = $montant + max($choixa, $choixb);
-			unset($dom);
-			unset($finder);
-			unset($choixa);
-			unset($choixb);
-		}
-		unset($raw);
-	}
+/* --------------------------------------------------------------------------
+   TIPEEE
+-------------------------------------------------------------------------- */
 
-// Tipeeestream
+if ($tipeee_id) {
+    $json = safe_get_json("https://api.tipeee.com/v2.0/projects/$tipeee_id", $erreur);
+    if ($json && isset($json->parameters->tipperAmount)) {
+        $value = floatval($json->parameters->tipperAmount);
+        if ($debug) echo "tipeee = $value\n";
+        $montant += $value;
+    }
+}
 
-	if ($tipeeestream_token){
-		$raw = @file_get_contents('https://api.tipeeestream.com/v1.0/events/forever.json?apiKey='.$tipeeestream_token);
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$json = json_decode($raw);
-			$tipeeestream_sub = $json->datas->details->twitch->subscribers;
-			if ($debug){
-				echo "tipeeestream (sub) = ".floatval($tipeeestream_sub*$tier1*$split)."\n";
-			}
-			$montant = $montant + floatval($tipeeestream_sub*$tier1*$split);
-			unset($json);
-			unset($tipeeestream_sub);
-		}
-		unset($raw);
-	}
-	
-	if ($tipeeestream_token && $tipeeestream_id){
-		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=1000&offset=0&type[]=donation&start='.$date_depart);
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$json = json_decode($raw);
-			$tipeeestream_dons = 0;
-			foreach ($json->datas->events as $events){
-				$tipeeestream_dons += $events->parameters->amount;
-			}	
-			unset($events);
-			if ($debug){
-				echo "tipeeestream (dons) = ".floatval($tipeeestream_dons)."\n";
-			}
-			$montant = $montant + floatval($tipeeestream_dons);
-			unset($json);
-			unset($tipeeestream_dons);
-		}
-		unset($raw);
-	}
+/* --------------------------------------------------------------------------
+   TWITCHTRACKER
+-------------------------------------------------------------------------- */
 
-	if ($tipeeestream_token && $tipeeestream_id){
-		$raw = @file_get_contents('https://www.tipeeestream.com/v2.0/users/'.$tipeeestream_id.'/events.json?access_token='.$tipeeestream_token.'&limit=1000&offset=0&type[]=cheer&start='.$date_depart);
-		if($raw === false){
-			$erreur = true;
-		}else{
-			$json = json_decode($raw);
-			$tipeeestream_cheers = 0;
-			foreach ($json->datas->events as $events){
-				$tipeeestream_cheers += $events->parameters->cheersSpend;
-			}	
-			unset($events);
-			if ($debug){
-				echo "tipeeestream (cheers) = ".floatval($tipeeestream_cheers*$bits)."\n";
-			}
-			$montant = $montant + floatval($tipeeestream_cheers*$bits);
-			unset($json);
-			unset($tipeeestream_cheers);
-		}
-		unset($raw);
-	}
+if ($twitch_id) {
+    $raw = safe_curl("https://twitchtracker.com/$twitch_id/subscribers", $erreur);
 
+    if ($raw) {
+        $dom = new DOMDocument;
+        @$dom->loadHTML($raw);
+        $finder = new DomXPath($dom);
 
-// Calcul final
+        // Active subs
+        $activeNode = $finder->query("//span[contains(@class, 'to-number')]")->item(0);
+        $active = $activeNode ? intval($activeNode->nodeValue) : 0;
 
-	$montant = (isset($_GET['montant'])) ? intval(htmlspecialchars($_GET['montant'])) : $montant;
-	$montant = (isset($_GET['ajout'])) ? $montant + intval(htmlspecialchars($_GET['ajout'])) : $montant;
+        $choixa = intval($active * $tier1 * $split);
 
-	$facteur_deg = ($goal > 0) ? $montant / $goal * 180 : 0;
-	if ($facteur_deg > 180) $facteur_deg = 180;
-	
-	if (isset($_GET['pourcentage'])){
-		$montant = ($goal > 0) ? intval($montant / $goal * 100) : 0;
-		$montant = ($montant > 100) ? "FAIT !" : $montant.'%';
-	}else{
-		$montant = (isset($_GET['label'])) ? htmlspecialchars($_GET['label']) : $montant.'€';
-	}
+        // Tiers
+        $tierNodes = $finder->query("//div[contains(@class, 'g-x-s-value') and contains(@class, 'to-number')]");
+        $t1 = $tierNodes->item(3) ? intval($tierNodes->item(3)->nodeValue) : 0;
+        $t2 = $tierNodes->item(4) ? intval($tierNodes->item(4)->nodeValue) : 0;
+        $t3 = $tierNodes->item(5) ? intval($tierNodes->item(5)->nodeValue) : 0;
 
-	if ($erreur){
-		$montant="~".$montant;
-	}
+        $choixb = intval($t1*$tier1*$split + $t2*$tier2*$split + $t3*$tier3*$split);
+
+        if ($debug) {
+            echo "twitchtracker current active = $choixa\n";
+            echo "twitchtracker tier 1 = ".($t1*$tier1*$split)."\n";
+            echo "twitchtracker tier 2 = ".($t2*$tier2*$split)."\n";
+            echo "twitchtracker tier 3 = ".($t3*$tier3*$split)."\n";
+        }
+
+        $montant += max($choixa, $choixb);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   TIPEEESTREAM
+-------------------------------------------------------------------------- */
+
+if ($tipeeestream_token) {
+
+    // Subs
+    $json = safe_get_json("https://api.tipeeestream.com/v1.0/events/forever.json?apiKey=$tipeeestream_token", $erreur);
+    if ($json && isset($json->datas->details->twitch->subscribers)) {
+        $sub = floatval($json->datas->details->twitch->subscribers * $tier1 * $split);
+        if ($debug) echo "tipeeestream (sub) = $sub\n";
+        $montant += $sub;
+    }
+
+    // Donations + Cheers
+    $types = [
+        "donation" => function($e){ return $e->parameters->amount ?? 0; },
+        "cheer"    => function($e){ return ($e->parameters->cheersSpend ?? 0) * 0.0159; }
+    ];
+
+    foreach ($types as $typeName => $extractor) {
+        $url = "https://www.tipeeestream.com/v2.0/users/$tipeeestream_id/events.json?access_token=$tipeeestream_token&limit=1000&offset=0&type[]=$typeName&start=$date_depart";
+        $json = safe_get_json($url, $erreur);
+
+        if ($json && isset($json->datas->events)) {
+            $sum = 0;
+            foreach ($json->datas->events as $e) {
+                $sum += $extractor($e);
+            }
+            if ($debug) echo "tipeeestream ($typeName) = $sum\n";
+            $montant += $sum;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   CALCUL FINAL
+-------------------------------------------------------------------------- */
+
+$montant = get_param('montant', FILTER_VALIDATE_INT, $montant);
+$montant += get_param('ajout', FILTER_VALIDATE_INT, 0);
+
+$facteur_deg = ($goal > 0) ? min(180, ($montant / $goal) * 180) : 0;
+
+if (isset($_GET['pourcentage'])) {
+    $montant = ($goal > 0) ? intval($montant / $goal * 100) : 0;
+    $montant = ($montant > 100) ? "FAIT !" : $montant . '%';
+} else {
+    $montant = get_param('label', FILTER_UNSAFE_RAW, $montant . '€');
+}
+
+if ($erreur) {
+    $montant = "~" . $montant;
+}
+
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-	<META HTTP-EQUIV="refresh" CONTENT="300">
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>Badge goal</title>
- 	<style type="text/css" media="screen">
+<meta charset="UTF-8">
+<META HTTP-EQUIV="refresh" CONTENT="300">
+<title>Badge goal</title>
 
+<style>
 @import url(http://fonts.googleapis.com/css?family=Roboto:400,700,300);
 
 :root {
@@ -296,10 +258,10 @@ body {
   font-weight: 700;
   font-size: 2em;
 }
+</style>
 
-	</style>
 </head>
-<body>	
+<body>
   <div class="circle-wrap">
     <div class="circle">
       <div class="mask full">
